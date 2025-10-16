@@ -1,49 +1,58 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
-import { FaEye, FaEyeSlash } from 'react-icons/fa'; // أيقونات كلمة المرور
-import '/src/styles/Components/Auth.css'; // استدعاء ملف التصميم
+import { FaEye, FaEyeSlash } from 'react-icons/fa';
+import '/src/styles/Components/Auth.css'; // استخدام نفس ملف التصميم
 
-function Login() {
+function Register() {
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  
+
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setSuccess('');
     setLoading(true);
 
     try {
-      const response = await axios.post('http://localhost/dental_api/login.php', { email, password });
-      const loggedInUser = response.data.user;
+      const response = await axios.post('http://localhost/dental_api/register.php', { name, email, password });
+      setSuccess(response.data.message + " Redirecting to login...");
 
-      localStorage.setItem('user', JSON.stringify(loggedInUser));
+      // انتظر ثانيتين ثم انقل المستخدم لصفحة الدخول
+      setTimeout(() => {
+        navigate('/login');
+      }, 2000);
 
-      // إعادة التوجيه بناءً على دور المستخدم
-      if (loggedInUser.role === 'admin') {
-        navigate('/dashboard');
-      } else {
-        navigate('/');
-      }
-      
     } catch (err) {
       setError(err.response?.data?.message || 'An error occurred. Please try again.');
     } finally {
-      setLoading(false); // أوقف التحميل دائمًا، سواء نجح أو فشل
+      setLoading(false);
     }
   };
 
   return (
     <div className="auth-container">
       <div className="auth-form-container">
-        <h2>Welcome Back!</h2>
+        <h2>Create Your Account</h2>
         <form onSubmit={handleSubmit}>
+          <div className="input-group">
+            <label htmlFor="name">Full Name</label>
+            <input
+              id="name"
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+            />
+          </div>
           <div className="input-group">
             <label htmlFor="email">Email</label>
             <input
@@ -67,19 +76,20 @@ function Login() {
               {showPassword ? <FaEyeSlash /> : <FaEye />}
             </span>
           </div>
-          
+
           {error && <div className="message error-message">{error}</div>}
+          {success && <div className="message success-message">{success}</div>}
 
           <button type="submit" className="auth-button" disabled={loading}>
-            {loading ? 'Logging in...' : 'Login'}
+            {loading ? 'Creating Account...' : 'Sign Up'}
           </button>
         </form>
         <p className="switch-auth-link">
-          Don't have an account? <Link to="/register">Sign Up</Link>
+          Already have an account? <Link to="/login">Login</Link>
         </p>
       </div>
     </div>
   );
 }
 
-export default Login;
+export default Register;
